@@ -20,13 +20,27 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("btn-agregar-fila").addEventListener("click", agregarFila);
   document.getElementById("btn-agregar-columna").addEventListener("click", agregarColumna);
   document.getElementById("btn-exportar").addEventListener("click", exportarCSV);
+  document.getElementById("btn-agregar-filas").addEventListener("click", function () {
+    var cantidad = Number(document.getElementById("cantidad-filas").value);
+    if (!Number.isInteger(cantidad) || cantidad < 1 || cantidad > 5000) { alert("Ingresa entre 1 y 5000 filas."); return; }
+    agregarFilas(cantidad);
+  });
+  document.getElementById("btn-agregar-columnas").addEventListener("click", function () {
+    var cantidad = Number(document.getElementById("cantidad-columnas").value);
+    if (!Number.isInteger(cantidad) || cantidad < 1 || cantidad > 100) { alert("Ingresa entre 1 y 100 columnas."); return; }
+    agregarColumnas(cantidad);
+  });
 
   var btnImportar = document.getElementById("btn-importar");
   var inputArchivo = document.getElementById("input-archivo");
   btnImportar.addEventListener("click", function () { inputArchivo.click(); });
   inputArchivo.addEventListener("change", function () {
     if (this.files && this.files.length > 0) {
-      importarCSV(this.files[0]);
+      var archivo = this.files[0];
+      var extension = archivo.name.split(".").pop().toLowerCase();
+      if (extension === "csv") importarCSV(archivo);
+      else if (extension === "xlsx" || extension === "xls") importarExcel(archivo);
+      else alert("Formato no compatible. Selecciona CSV o Excel.");
       this.value = "";
       actualizarSelectoresVariables();
     }
@@ -65,6 +79,16 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("btn-graf-barras").addEventListener("click", ejecutarGraficoBarras);
   document.getElementById("btn-graf-caja").addEventListener("click", ejecutarGraficoCaja);
   document.getElementById("btn-graf-dispersion").addEventListener("click", ejecutarGraficoDispersion);
+  var btnColor = document.getElementById("btn-color-barras");
+  if (btnColor) btnColor.addEventListener("click", function () {
+    var selector = document.getElementById("color-barras");
+    if (!selector) return;
+    window.MULTISTATS_COLOR_BARRAS = selector.value;
+    try { localStorage.setItem("multistats_color_barras", selector.value); } catch (e) {}
+    if (typeof registrarCambioRequisito === "function") registrarCambioRequisito("Gráfico editado", "Color de barras: " + selector.value);
+    if (typeof window.mostrarToast === "function") window.mostrarToast("Color aplicado a los gráficos de barras.", "exito");
+    if (typeof ejecutarGraficoBarras === "function") ejecutarGraficoBarras();
+  });
 });
 
 function mostrarSeccion(nombre) {
@@ -227,8 +251,15 @@ function ejecutarIntervalos() {
   if (isNaN(idx) || !datos.columnas[idx]) { avisarEstadistica("Selecciona una variable numérica."); return; }
   var numInt = Number(document.getElementById("input-num-intervalos").value);
   if (isNaN(numInt) || numInt < 1) { avisarEstadistica("Número de intervalos inválido."); return; }
-  var tabla = tablaFrecuenciasIntervalos(datos.columnas[idx].valores, numInt);
-  if (!tabla) { avisarEstadistica("Sin valores numéricos válidos."); return; }
+  var campoLi = document.getElementById("input-limite-inferior");
+  var campoLs = document.getElementById("input-limite-superior");
+  var li = campoLi && campoLi.value !== "" ? Number(campoLi.value) : undefined;
+  var ls = campoLs && campoLs.value !== "" ? Number(campoLs.value) : undefined;
+  if ((li !== undefined && !isFinite(li)) || (ls !== undefined && !isFinite(ls))) { avisarEstadistica("Los límites deben ser numéricos."); return; }
+  if ((li === undefined) !== (ls === undefined)) { avisarEstadistica("Debes indicar ambos límites o dejar ambos automáticos."); return; }
+  if (li !== undefined && li >= ls) { avisarEstadistica("El límite inferior debe ser menor que el superior."); return; }
+  var tabla = tablaFrecuenciasIntervalos(datos.columnas[idx].valores, numInt, li, ls);
+  if (!tabla) { avisarEstadistica("Sin datos válidos o existen valores fuera de los límites indicados."); return; }
   mostrarTablaIntervalos(datos.columnas[idx].nombre, tabla);
   mostrarSeccion("resultados");
 }

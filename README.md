@@ -13,7 +13,10 @@ La aplicación está diseñada de forma modular:
 1. **Gestión de Datos (`js/datos/`, `css/tabla.css`)**
    - Hoja de cálculo editable en tiempo real (estilo Excel).
    - Agregar, editar y eliminar filas y columnas.
-   - Importación y exportación de archivos CSV con soporte UTF-8 (BOM).
+   - Importación y exportación de archivos CSV con soporte UTF-8 (BOM) y archivos Excel (.xlsx / .xls) mediante SheetJS.
+   - Exportación de la tabla de datos a Word (.doc).
+   - Agregado masivo de filas y columnas indicando la cantidad deseada.
+   - Registro de cambios realizados en datos y encabezados.
    - Pegado directo desde hojas de cálculo externas (Ctrl+V con detección automática de encabezados).
    - Detección y validación dinámica de tipos de datos (numéricos y categóricos).
 
@@ -44,16 +47,54 @@ La aplicación está diseñada de forma modular:
      - **Diagrama de Caja y Bigotes (Boxplot)** con cuantiles y detección de valores atípicos.
      - **Gráficos de Dispersión** con recta de regresión estimada y ecuación ajustada.
      - **Gráficos de Clústeres** con elipses de dispersión por grupo, marcas interactivas de centroides/medoides y leyendas filtrables.
+   - Selector de color personalizado para las barras de gráficos.
    - Exportación directa a formatos SVG y PNG (1440×840 px).
    - Navegación accesible por teclado y tooltips interactivos.
 
-5. **Panel de Resultados y Reportes (`js/resultados/`, `css/resultados.css`)**
+5. **Fórmulas y control de requisitos (`js/datos/requisitos.js`, `css/requerimientos.css`)**
+   - Catálogo de fórmulas con expresión, descripción, inclusión/exclusión y registro de cambios.
+   - Alta y eliminación de fórmulas personalizadas; persistencia local en el navegador.
+
+6. **Panel de Resultados y Reportes (`js/resultados/`, `css/resultados.css`)**
    - Tarjetas KPI visuales para métricas clave.
    - Tablas formateadas con alineación numérica.
    - Sistema de notificaciones flotantes (Toasts).
    - Barra de utilidades con limpieza de resultados y soporte de impresión / exportación a PDF (`@media print`).
 
 ---
+
+## 🧪 Laboratorio Estadístico Avanzado (v2.1)
+
+Accesible desde el botón **Laboratorio avanzado** del dashboard o directamente desde `laboratorio.html`.
+
+- Perfil EDA: estadísticos descriptivos, cuantiles tipo 7, atípicos IQR, asimetría y curtosis.
+- Matrices de correlación Pearson y Spearman (rangos medios para empates).
+- PCA con estandarización Z-score, Jacobi, autovalores, varianza explicada, cargas y puntuaciones.
+- K-Means multivariado reproducible, WCSS y silueta.
+- Regresión OLS múltiple, métricas de ajuste y Durbin–Watson descriptivo.
+- Mann–Whitney U bilateral aproximado con corrección de continuidad/empates.
+- Kruskal–Wallis en el motor estadístico con corrección por empates.
+- Intervalo percentil bootstrap de la media con número de réplicas y semilla configurables.
+- Importación CSV y exportación del perfil EDA en CSV UTF-8 BOM.
+
+**Alcance y rigor:** la especificación `docs/REQUERIMIENTOS_EVOLUTIVOS_v2.md` diferencia funcionalidades implementadas, parciales y futuras. Mann–Whitney usa aproximación normal (no exacta), Kruskal–Wallis usa aproximación chi-cuadrado, OLS usa ecuaciones normales y el bootstrap usa intervalo percentil. No se deben interpretar estos resultados sin revisar diseño muestral, supuestos y limitaciones documentadas.
+
+## 🧪 Pruebas automatizadas
+
+Ejecutar desde la raíz del proyecto:
+
+```bash
+node pruebas/test_laboratorio.js
+node pruebas/test_dashboard.js
+node pruebas/test_e2e.js
+node pruebas/test_menu_actions.js
+```
+
+## 📌 Notas de implementación
+- La importación y exportación Excel utiliza SheetJS desde CDN, por lo que necesita conexión a Internet para cargar esa biblioteca.
+- Las fórmulas personalizadas se registran como catálogo documentado y se pueden marcar para incluirlas o excluirlas; no se evalúan automáticamente como expresiones ejecutables.
+- Los límites personalizados de intervalos deben cubrir todos los valores numéricos válidos; así se evita descartar observaciones silenciosamente.
+- Los datos originales y el panel de resultados permanecen en áreas distintas de la interfaz.
 
 ## 💻 Ejecución y Uso
 

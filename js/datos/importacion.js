@@ -125,6 +125,7 @@ function procesarCSV(texto) {
   actualizarTiposColumnas();
   refrescarSelectores();
   avisarDatos("Datos importados con éxito (" + resumenHoja() + ")", "exito");
+  if (typeof registrarCambioRequisito === "function") registrarCambioRequisito("Importación", "Archivo CSV importado");
 }
 
 // Pegado desde Excel (tabulaciones y saltos de línea)
@@ -205,4 +206,48 @@ function pegarDesdeTexto(texto) {
   actualizarTiposColumnas();
   refrescarSelectores();
   avisarDatos("Datos pegados con éxito (" + resumenHoja() + ")", "exito");
+  if (typeof registrarCambioRequisito === "function") registrarCambioRequisito("Pegado de datos", resumenHoja());
 }
+
+// Importación de archivos Excel (.xlsx / .xls) mediante SheetJS.
+function importarExcel(archivo) {
+  if (typeof XLSX === "undefined") { avisarDatos("No se pudo cargar el lector de Excel. Revisa tu conexión a Internet.", "error"); return; }
+  var lector = new FileReader();
+  lector.onload = function (evento) {
+    try {
+      var libro = XLSX.read(evento.target.result, { type: "array" });
+      var hoja = libro.Sheets[libro.SheetNames[0]];
+      var matriz = XLSX.utils.sheet_to_json(hoja, { header: 1, defval: "" });
+      procesarMatrizImportada(matriz);
+    } catch (error) { avisarDatos("No se pudo procesar el archivo Excel.", "error"); }
+  };
+  lector.onerror = function () { avisarDatos("No se pudo leer el archivo Excel.", "error"); };
+  lector.readAsArrayBuffer(archivo);
+}
+
+function procesarMatrizImportada(matriz) {
+  while (matriz.length && matriz[matriz.length - 1].every(function (v) { return v === "" || v === null; })) matriz.pop();
+  if (!matriz.length || !matriz[0].length) { avisarDatos("El archivo no contiene datos.", "error"); return; }
+  var primera = matriz[0];
+  var esEncabezado = primera.some(function (v) { return v !== "" && isNaN(Number(v)); });
+  var encabezados = esEncabezado ? primera : primera.map(function (_, i) { return "C" + (i + 1); });
+  var inicio = esEncabezado ? 1 : 0;
+  var cantidad = Math.max(encabezados.length, ...matriz.map(function (fila) { return fila.length; }));
+  var columnas = [];
+  for (var c = 0; c < cantidad; c++) columnas.push({ nombre: String(encabezados[c] || ("C" + (c + 1))), tipo: "numerica", valores: [] });
+  for (var f = inicio; f < matriz.length; f++) {
+    for (var j = 0; j < cantidad; j++) {
+      var valor = matriz[f][j];
+      if (valor === "" || valor === null || valor === undefined) columnas[j].valores.push(null);
+      else if (typeof valor === "number") columnas[j].valores.push(valor);
+      else if (!isNaN(Number(valor)) && String(valor).trim() !== "") columnas[j].valores.push(Number(valor));
+      else columnas[j].valores.push(String(valor));
+    }
+  }
+  reemplazarDatos(columnas);
+  actualizarTiposColumnas();
+  refrescarSelectores();
+  avisarDatos("Excel importado correctamente (" + resumenHoja() + ")", "exito");
+  if (typeof registrarCambioRequisito === "function") registrarCambioRequisito("Importación", "Archivo Excel: " + archivoNombreSeguro(matriz));
+}
+function archivoNombreSeguro(matriz) { return matriz.length + " filas de origen"; }

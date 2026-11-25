@@ -45,7 +45,7 @@ function tablaFrecuencias(valores) {
 }
 
 // Tabla de frecuencias por intervalos para variable numérica continua
-function tablaFrecuenciasIntervalos(valores, numIntervalos) {
+function tablaFrecuenciasIntervalos(valores, numIntervalos, limiteInferior, limiteSuperior) {
   var validos = [];
   for (var i = 0; i < valores.length; i++) {
     var v = valores[i];
@@ -56,8 +56,11 @@ function tablaFrecuenciasIntervalos(valores, numIntervalos) {
 
   if (validos.length === 0) return null;
 
-  var min = minimo(validos);
-  var max = maximo(validos);
+  var minDatos = minimo(validos);
+  var maxDatos = maximo(validos);
+  var min = limiteInferior === undefined ? minDatos : Number(limiteInferior);
+  var max = limiteSuperior === undefined ? maxDatos : Number(limiteSuperior);
+  if (min > minDatos || max < maxDatos || min >= max) return null;
   var rango = max - min;
 
   if (numIntervalos === undefined || numIntervalos === null) {
@@ -138,6 +141,8 @@ function tablaFrecuenciasIntervalos(valores, numIntervalos) {
     intervalos: intervalos,
     total: validos.length,
     numIntervalos: numIntervalos,
-    amplitud: amplitud
+    amplitud: amplitud,
+    limiteInferior: min,
+    limiteSuperior: max
   };
 }

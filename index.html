@@ -20,6 +20,7 @@
   <link rel="stylesheet" href="css/graficos.css">
   <link rel="stylesheet" href="css/resultados.css">
   <link rel="stylesheet" href="css/formato_dashboard.css">
+  <link rel="stylesheet" href="css/requerimientos.css">
 </head>
 <body class="dashboard-modo">
 
@@ -47,11 +48,11 @@
         <button type="button" class="dash-menu-link" onclick="toggleDropdownMenu('menu-archivo', event)">Archivo ▾</button>
         <div id="menu-archivo" class="dash-dropdown">
           <button type="button" class="dash-dropdown-link" onclick="ejecutarAccionMenu('importar-csv')">
-            <span>📥 Importar archivo CSV...</span>
+            <span>📥 Importar CSV / Excel...</span>
           </button>
-          <button type="button" class="dash-dropdown-link" onclick="ejecutarAccionMenu('exportar-csv')">
-            <span>📤 Exportar hoja a CSV</span>
-          </button>
+          <button type="button" class="dash-dropdown-link" onclick="ejecutarAccionMenu('exportar-csv')"><span>📤 Exportar hoja a CSV</span></button>
+          <button type="button" class="dash-dropdown-link" onclick="exportarExcel()"><span>📊 Exportar hoja a Excel (.xlsx)</span></button>
+          <button type="button" class="dash-dropdown-link" onclick="exportarDatosWord()"><span>📄 Exportar tabla a Word (.doc)</span></button>
           <button type="button" class="dash-dropdown-link" onclick="ejecutarAccionMenu('exportar-word')">
             <span>📄 Exportar a Word (.doc)</span>
           </button>
@@ -187,6 +188,8 @@
         </div>
       </div>
     </div>
+
+    <div class="dash-menu-item" style="margin-left:10px"><a class="dash-menu-link" href="laboratorio.html" style="text-decoration:none;border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:8px 12px">🧪 Laboratorio avanzado</a></div>
 
     <!-- Iconos de usuario, alertas y tema -->
     <div class="dash-header-der">
@@ -338,17 +341,35 @@
         <div class="dash-card-header">
           <h2 class="dash-card-titulo" id="dash-titulo-tabla">Tabla de datos</h2>
           <div class="dash-card-botones">
-            <button type="button" id="btn-importar" class="dash-btn-outline" aria-label="Importar archivo CSV">Importar CSV</button>
+            <button type="button" id="btn-importar" class="dash-btn-outline" aria-label="Importar archivo CSV o Excel">Importar</button>
             <button type="button" id="dash-btn-limpiar" class="dash-btn-outline" onclick="limpiarTablaDatos()">Limpiar</button>
             <button type="button" id="dash-btn-filtrar" class="dash-btn-outline" onclick="filtrarDatosValidos()">Filtrar</button>
             <button type="button" id="btn-agregar-fila" class="dash-btn-outline" title="Agregar una fila">+</button>
             <button type="button" id="btn-agregar-columna" class="dash-btn-outline" title="Agregar una columna">+ Col</button>
             <button type="button" id="btn-exportar" class="dash-btn-outline" title="Exportar como CSV">CSV</button>
-            <input type="file" id="input-archivo" accept=".csv" hidden>
+            <label class="req-control-cantidad">Filas <input type="number" id="cantidad-filas" min="1" max="5000" value="1"></label>
+            <button type="button" id="btn-agregar-filas" class="dash-btn-outline">+ filas</button>
+            <label class="req-control-cantidad">Columnas <input type="number" id="cantidad-columnas" min="1" max="100" value="1"></label>
+            <button type="button" id="btn-agregar-columnas" class="dash-btn-outline">+ columnas</button>
+            <input type="file" id="input-archivo" accept=".csv,.xlsx,.xls" hidden>
           </div>
         </div>
 
         <div id="contenedor-tabla" tabindex="0" role="region" aria-label="Hoja de datos"></div>
+        <details class="req-panel" id="panel-formulas">
+          <summary>Fórmulas y control de requisitos</summary>
+          <div class="req-panel-contenido">
+            <form id="form-nueva-formula" class="req-formula-form">
+              <input id="formula-nombre" type="text" placeholder="Nombre de la fórmula" required>
+              <input id="formula-expresion" type="text" placeholder="Expresión matemática" required>
+              <input id="formula-descripcion" type="text" placeholder="Descripción / justificación" required>
+              <button class="dash-btn-outline" type="submit">Agregar fórmula</button>
+            </form>
+            <div id="lista-formulas" class="req-lista-formulas"></div>
+            <h4>Historial de cambios</h4>
+            <ol id="historial-requisitos" class="req-historial"><li>Sin cambios registrados.</li></ol>
+          </div>
+        </details>
       </section>
 
       <!-- TARJETA 2: VISUALIZACIÓN Y RESOLUCIÓN -->
@@ -534,10 +555,9 @@
                     <span class="est-etiqueta">Variable numérica</span>
                     <select id="select-variable-intervalos"></select>
                   </label>
-                  <label class="est-campo est-campo--corto" for="input-num-intervalos">
-                    <span class="est-etiqueta">Intervalos</span>
-                    <input type="number" id="input-num-intervalos" value="5" min="1">
-                  </label>
+                  <label class="est-campo est-campo--corto" for="input-num-intervalos"><span class="est-etiqueta">Cantidad</span><input type="number" id="input-num-intervalos" value="5" min="1"></label>
+                  <label class="est-campo est-campo--corto" for="input-limite-inferior"><span class="est-etiqueta">Límite inferior (opcional)</span><input type="number" id="input-limite-inferior" step="any" placeholder="Automático"></label>
+                  <label class="est-campo est-campo--corto" for="input-limite-superior"><span class="est-etiqueta">Límite superior (opcional)</span><input type="number" id="input-limite-superior" step="any" placeholder="Automático"></label>
                 </div>
                 <div class="est-acciones"><button type="button" id="btn-intervalos" class="est-btn est-btn--primario">Generar intervalos</button></div>
               </div>
@@ -657,6 +677,7 @@
 
         <!-- SECCIÓN GRÁFICOS -->
         <section id="seccion-graficos" style="display:none;">
+          <div class="req-color-control"><label for="color-barras">Color de las barras</label><input type="color" id="color-barras" value="#3b82f6"><button type="button" id="btn-color-barras" class="est-btn est-btn--secundario">Aplicar color</button></div>
           <h2>Gráficos Exploratorios</h2>
           <div class="graf-panel">
             <label class="graf-campo"><span class="graf-campo-etiqueta">Variable</span><select id="select-graf-hist"></select></label>
@@ -696,10 +717,12 @@
   <!-- ==========================================================================
        SCRIPTS DE LA APLICACIÓN
        ========================================================================== -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="js/datos/tabla.js"></script>
   <script src="js/datos/validacion.js"></script>
   <script src="js/datos/importacion.js"></script>
   <script src="js/datos/exportacion.js"></script>
+  <script src="js/datos/requisitos.js"></script>
   <script src="js/estadistica/descriptiva.js"></script>
   <script src="js/estadistica/frecuencias.js"></script>
   <script src="js/estadistica/agrupados.js"></script>

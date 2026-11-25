@@ -153,6 +153,7 @@ function cambiarCelda(fila, columna, valor) {
       datos.columnas[columna].valores[fila] = valor;
     }
   }
+  if (typeof registrarCambioRequisito === "function") registrarCambioRequisito("Dato editado", "Fila " + (fila + 1) + ", columna " + (columna + 1));
   if (typeof actualizarTiposColumnas === "function") {
     actualizarTiposColumnas();
   }
@@ -163,7 +164,9 @@ function cambiarCelda(fila, columna, valor) {
 
 // Cambia el nombre de una columna
 function cambiarNombreColumna(columna, nombre) {
+  var anterior = datos.columnas[columna].nombre;
   datos.columnas[columna].nombre = nombre;
+  if (typeof registrarCambioRequisito === "function" && anterior !== nombre) registrarCambioRequisito("Encabezado editado", anterior + " → " + nombre);
   if (typeof actualizarSelectoresVariables === "function") {
     actualizarSelectoresVariables();
   }
@@ -179,6 +182,7 @@ function agregarFila() {
   }
   datos.filas++;
   if (datos.asignaciones) datos.asignaciones.push(0);
+  if (typeof registrarCambioRequisito === "function") registrarCambioRequisito("Fila agregada", "Se agregó la fila " + datos.filas);
   dibujarTabla();
   notificarCambioDatos();
 }
@@ -191,6 +195,7 @@ function agregarColumna() {
     nuevaColumna.valores.push(null);
   }
   datos.columnas.push(nuevaColumna);
+  if (typeof registrarCambioRequisito === "function") registrarCambioRequisito("Columna agregada", nuevoNombre);
   dibujarTabla();
   notificarCambioDatos();
 }
@@ -203,6 +208,7 @@ function eliminarFila(fila) {
   }
   if (datos.asignaciones) datos.asignaciones.splice(fila, 1);
   datos.filas--;
+  if (typeof registrarCambioRequisito === "function") registrarCambioRequisito("Fila eliminada", "Fila " + (fila + 1));
   dibujarTabla();
   notificarCambioDatos();
 }
@@ -210,7 +216,9 @@ function eliminarFila(fila) {
 // Elimina una columna con confirmación
 function eliminarColumna(columna) {
   if (!confirm("¿Eliminar la columna " + datos.columnas[columna].nombre + "?")) return;
+  var nombreEliminado = datos.columnas[columna].nombre;
   datos.columnas.splice(columna, 1);
+  if (typeof registrarCambioRequisito === "function") registrarCambioRequisito("Columna eliminada", nombreEliminado);
   dibujarTabla();
   notificarCambioDatos();
 }
@@ -225,6 +233,31 @@ function reemplazarDatos(nuevasColumnas) {
   datos.asignaciones = null;
   datos.seleccion = [];
   datos.resultados = null;
+  dibujarTabla();
+  notificarCambioDatos();
+}
+
+// Agrega varias filas en una sola operación para evitar redibujar la tabla repetidamente.
+function agregarFilas(cantidad) {
+  for (var i = 0; i < cantidad; i++) {
+    for (var c = 0; c < datos.columnas.length; c++) datos.columnas[c].valores.push(null);
+    datos.filas++;
+    if (datos.asignaciones) datos.asignaciones.push(0);
+  }
+  if (typeof registrarCambioRequisito === "function") registrarCambioRequisito("Filas agregadas", cantidad + " filas nuevas");
+  dibujarTabla();
+  notificarCambioDatos();
+}
+
+// Agrega varias columnas en una sola operación.
+function agregarColumnas(cantidad) {
+  for (var i = 0; i < cantidad; i++) {
+    var nuevoNombre = "C" + (datos.columnas.length + 1);
+    var nuevaColumna = { nombre: nuevoNombre, tipo: "numerica", valores: [] };
+    for (var f = 0; f < datos.filas; f++) nuevaColumna.valores.push(null);
+    datos.columnas.push(nuevaColumna);
+  }
+  if (typeof registrarCambioRequisito === "function") registrarCambioRequisito("Columnas agregadas", cantidad + " columnas nuevas");
   dibujarTabla();
   notificarCambioDatos();
 }

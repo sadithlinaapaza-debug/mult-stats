@@ -1,0 +1,5 @@
+MultiStats 2.1.0
+Entrega ampliada: 25/11/2026
+Incluye dashboard original + Laboratorio Estadístico Avanzado RF-11 a RF-20.
+Ver docs/REQUERIMIENTOS_EVOLUTIVOS_v2.md para alcance, validación, supuestos y pendientes.
+No se declara cierre integral de RF-01..RF-10 ni CORR-01..CORR-10 sin validar individualmente todos sus criterios de aceptación.

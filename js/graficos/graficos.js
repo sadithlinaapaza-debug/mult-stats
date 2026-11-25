@@ -24,6 +24,7 @@ var GRAF_PALETA = [
 
 // Contador para ids únicos (clipPath) cuando hay varios gráficos en la página
 var grafContadorIds = 0;
+try { window.MULTISTATS_COLOR_BARRAS = localStorage.getItem("multistats_color_barras") || ""; } catch (e) { window.MULTISTATS_COLOR_BARRAS = ""; }
 
 // Franja superior donde el SVG dibuja su título: en pantalla se recorta porque el
 // título ya está en el encabezado de la tarjeta; al descargar se incluye
@@ -990,7 +991,7 @@ function dibujarHistograma(valores, nombreVariable, numIntervalos) {
   dibujarRejilla(svg, { y: escY }, area);
   dibujarEjes(svg, { y: escY }, area, { tituloX: nombreVariable, tituloY: "Frecuencia" });
 
-  var color = colorSerie(0);
+  var color = window.MULTISTATS_COLOR_BARRAS || colorSerie(0);
   var g = svgElemento("g", { "class": "graf-barras" }, svg);
   for (var j = 0; j < intervalos.length; j++) {
     var it = intervalos[j];
@@ -1071,7 +1072,7 @@ function dibujarBarras(valores, nombreVariable) {
   var anchoBanda = (area.derecha - area.izquierda) / filas.length;
   var separacion = Math.min(anchoBanda * 0.25, 18);
   var salto = rotar ? Math.max(1, Math.ceil(13 / anchoBanda)) : 1;
-  var color = colorSerie(0);
+  var color = window.MULTISTATS_COLOR_BARRAS || colorSerie(0);
   var g = svgElemento("g", { "class": "graf-barras" }, svg);
 
   for (var j = 0; j < filas.length; j++) {
@@ -1145,7 +1146,7 @@ function dibujarCaja(valores, nombreVariable) {
   dibujarRejilla(svg, { y: escY }, area);
   dibujarEjes(svg, { y: escY }, area, { tituloY: nombreVariable, ejeX: false });
 
-  var color = colorSerie(0);
+  var color = window.MULTISTATS_COLOR_BARRAS || colorSerie(0);
   var g = svgElemento("g", { "class": "graf-caja" }, svg);
   var cx = (area.izquierda + area.derecha) / 2;
   var anchoCaja = 120;
@@ -1216,7 +1217,7 @@ function dibujarDispersion(x, y, nombreX, nombreY, reg) {
   var escY = plano.y;
 
   // Puntos
-  var color = colorSerie(0);
+  var color = window.MULTISTATS_COLOR_BARRAS || colorSerie(0);
   var nombres = nombresObservaciones(x, y);
   var puntos = svgElemento("g", { "class": "graf-puntos", "data-serie": 0 }, svg);
   for (var i = 0; i < x.length; i++) {
